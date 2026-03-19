@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ClienteControl</title>
+</head>
+<body>
+
+<h2>Login</h2>
+<input id="email" placeholder="Correo">
+<input id="password" placeholder="Contraseña" type="password">
+<button onclick="login()">Entrar</button>
+
+<h2>Registrar Cliente</h2>
+
+<input id="nombre" placeholder="Nombre"><br>
+<input id="telefono" placeholder="Teléfono"><br>
+<input id="deuda" placeholder="Deuda"><br>
+
+<select id="estado">
+  <option>Bueno</option>
+  <option>Riesgo</option>
+  <option>Moroso</option>
+</select><br>
+
+<input id="nota" placeholder="Nota"><br><br>
+
+<button onclick="guardar()">Guardar</button>
+
+<h2>Clientes</h2>
+<ul id="lista"></ul>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+var firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+var auth = firebase.auth();
+var db = firebase.firestore();
+var userId = null;
+
+function login(){
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+  .then((user)=>{
+    userId = user.user.uid;
+    cargarClientes();
+  });
+}
+
+function guardar(){
+  let nombre = document.getElementById("nombre").value;
+  let telefono = document.getElementById("telefono").value;
+  let deuda = document.getElementById("deuda").value;
+  let estado = document.getElementById("estado").value;
+  let nota = document.getElementById("nota").value;
+
+  db.collection("clientes").add({
+    nombre, telefono, deuda, estado, nota, userId
+  });
+}
+
+function cargarClientes(){
+  db.collection("clientes")
+  .where("userId", "==", userId)
+  .onSnapshot((snapshot)=>{
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    snapshot.forEach((doc)=>{
+      let data = doc.data();
+      lista.innerHTML += `
+        <li>
+          ${data.nombre} - ${data.deuda} - ${data.estado}
+          <br>Nota: ${data.nota}
+        </li>
+      `;
+    });
+  });
+}
+</script>
+
+</body>
+</html>
